@@ -7,7 +7,7 @@ from tqdm import tqdm
 import numpy as np
 from encoder import inference as encoder
 from synthesizer.preprocess_speaker import preprocess_speaker_general
-from synthesizer.preprocess_transcript import preprocess_transcript_aishell3
+from synthesizer.preprocess_transcript import preprocess_transcript_aishell3, preprocess_transcript_magicdata
 
 data_info = {
     "aidatatang_200zh": {
@@ -18,13 +18,19 @@ data_info = {
     "magicdata": {
         "subfolders": ["train"],
         "trans_filepath": "train/TRANS.txt",
-        "speak_func": preprocess_speaker_general
+        "speak_func": preprocess_speaker_general,
+        "transcript_func": preprocess_transcript_magicdata,
     },
     "aishell3":{
         "subfolders": ["train/wav"],
         "trans_filepath": "train/content.txt",
         "speak_func": preprocess_speaker_general,
         "transcript_func": preprocess_transcript_aishell3,
+    },
+    "data_aishell":{
+        "subfolders": ["wav/train"],
+        "trans_filepath": "transcript/aishell_transcript_v0.8.txt",
+        "speak_func": preprocess_speaker_general
     }
 }
 

@@ -10,6 +10,7 @@ from typing import Union, List
 import numpy as np
 import librosa
 from utils import logmmse
+import json
 from pypinyin import lazy_pinyin, Style
 
 class Synthesizer:
@@ -44,6 +45,11 @@ class Synthesizer:
         return self._model is not None
     
     def load(self):
+        # Try to scan config file
+        model_config_fpaths = list(self.model_fpath.parent.rglob("*.json"))
+        if len(model_config_fpaths)>0 and model_config_fpaths[0].exists():
+            with model_config_fpaths[0].open("r", encoding="utf-8") as f:
+                hparams.loadJson(json.load(f))
         """
         Instantiates and loads the model given the weights file that was passed in the constructor.
         """
@@ -62,7 +68,7 @@ class Synthesizer:
                                stop_threshold=hparams.tts_stop_threshold,
                                speaker_embedding_size=hparams.speaker_embedding_size).to(self.device)
 
-        self._model.load(self.model_fpath)
+        self._model.load(self.model_fpath, self.device)
         self._model.eval()
 
         if self.verbose:
@@ -70,7 +76,7 @@ class Synthesizer:
 
     def synthesize_spectrograms(self, texts: List[str],
                                 embeddings: Union[np.ndarray, List[np.ndarray]],
-                                return_alignments=False):
+                                return_alignments=False, style_idx=0, min_stop_token=5, steps=2000):
         """
         Synthesizes mel spectrograms from texts and speaker embeddings.
 
@@ -125,7 +131,7 @@ class Synthesizer:
             speaker_embeddings = torch.tensor(speaker_embeds).float().to(self.device)
 
             # Inference
-            _, mels, alignments = self._model.generate(chars, speaker_embeddings)
+            _, mels, alignments = self._model.generate(chars, speaker_embeddings, style_idx=style_idx, min_stop_token=min_stop_token, steps=steps)
             mels = mels.detach().cpu().numpy()
             for m in mels:
                 # Trim silence from end of each spectrogram
@@ -143,7 +149,7 @@ class Synthesizer:
         Loads and preprocesses an audio file under the same conditions the audio files were used to
         train the synthesizer. 
         """
-        wav = librosa.load(str(fpath), hparams.sample_rate)[0]
+        wav = librosa.load(path=str(fpath), sr=hparams.sample_rate)[0]
         if hparams.rescale:
             wav = wav / np.abs(wav).max() * hparams.rescaling_max
         # denoise

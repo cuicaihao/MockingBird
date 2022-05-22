@@ -6,7 +6,7 @@
 > English | [中文](README-CN.md)
 
 ## Features
-🌍 **Chinese** supported mandarin and tested with multiple datasets: aidatatang_200zh, magicdata, aishell3, and etc.
+🌍 **Chinese** supported mandarin and tested with multiple datasets: aidatatang_200zh, magicdata, aishell3, data_aishell, and etc.
 
 🤩 **PyTorch** worked for pytorch, tested in version of 1.9.0(latest in August 2021), with GPU Tesla T4 and GTX 2060
 
@@ -17,6 +17,14 @@
 🌍 **Webserver Ready** to serve your result with remote calling
 
 ### [DEMO VIDEO](https://www.bilibili.com/video/BV17Q4y1B7mY/)
+
+### Ongoing Works(Helps Needed)
+* Major upgrade on GUI/Client and unifying web and toolbox
+[X] Init framework `./mkgui` and [tech design](https://vaj2fgg8yn.feishu.cn/docs/doccnvotLWylBub8VJIjKzoEaee)
+[X] Add demo part of Voice Cloning and Conversion
+[X] Add preprocessing and training for Voice Conversion
+[ ] Add preprocessing and training for Encoder/Synthesizer/Vocoder
+* Major upgrade on model backend based on ESPnet2(not yet started)
 
 ## Quick Start
 
@@ -32,27 +40,37 @@
 > Note that we are using the pretrained encoder/vocoder but synthesizer, since the original model is incompatible with the Chinese sympols. It means the demo_cli is not working at this moment.
 ### 2. Prepare your models
 You can either train your models or use existing ones:
-#### 2.1. Train synthesizer with your dataset
+
+#### 2.1 Train encoder with your dataset (Optional)
+
+* Preprocess with the audios and the mel spectrograms:
+`python encoder_preprocess.py <datasets_root>` Allowing parameter `--dataset {dataset}` to support the datasets you want to preprocess. Only the train set of these datasets will be used. Possible names: librispeech_other, voxceleb1, voxceleb2. Use comma to sperate multiple datasets.
+
+* Train the encoder: `python encoder_train.py my_run <datasets_root>/SV2TTS/encoder`
+> For training, the encoder uses visdom. You can disable it with `--no_visdom`, but it's nice to have. Run "visdom" in a separate CLI/process to start your visdom server.
+
+#### 2.2 Train synthesizer with your dataset
 * Download dataset and unzip: make sure you can access all .wav in folder
 * Preprocess with the audios and the mel spectrograms:
 `python pre.py <datasets_root>`
-Allowing parameter `--dataset {dataset}` to support aidatatang_200zh, magicdata, aishell3, etc.
+Allowing parameter `--dataset {dataset}` to support aidatatang_200zh, magicdata, aishell3, data_aishell, etc.If this parameter is not passed, the default dataset will be aidatatang_200zh.
 
 * Train the synthesizer:
 `python synthesizer_train.py mandarin <datasets_root>/SV2TTS/synthesizer`
 
 * Go to next step when you see attention line show and loss meet your need in training folder *synthesizer/saved_models/*.
 
-#### 2.2 Use pretrained model of synthesizer
+#### 2.3 Use pretrained model of synthesizer
 > Thanks to the community, some models will be shared:
 
 | author | Download link | Preview Video | Info |
 | --- | ----------- | ----- |----- |
-| @myself | https://pan.baidu.com/s/1VHSKIbxXQejtxi2at9IrpA  [Baidu](https://pan.baidu.com/s/1VHSKIbxXQejtxi2at9IrpA ) code：i183  |  | 200k steps only trained by aidatatang_200zh
-|@FawenYo | https://drive.google.com/file/d/1H-YGOUHpmqKxJ9FRc6vAjPuqQki24UbC/view?usp=sharing [Baidu Pan](https://pan.baidu.com/s/1vSYXO4wsLyjnF3Unl-Xoxg) Code：1024  | [input](https://github.com/babysor/MockingBird/wiki/audio/self_test.mp3) [output](https://github.com/babysor/MockingBird/wiki/audio/export.wav) | 200k steps with local accent of Taiwan
-|@miven| https://pan.baidu.com/s/1PI-hM3sn5wbeChRryX-RCQ code：2021 | https://www.bilibili.com/video/BV1uh411B7AD/
+| @author | https://pan.baidu.com/s/1iONvRxmkI-t1nHqxKytY3g  [Baidu](https://pan.baidu.com/s/1iONvRxmkI-t1nHqxKytY3g) 4j5d  |  | 75k steps trained by multiple datasets
+| @author | https://pan.baidu.com/s/1fMh9IlgKJlL2PIiRTYDUvw  [Baidu](https://pan.baidu.com/s/1fMh9IlgKJlL2PIiRTYDUvw) code：om7f  |  | 25k steps trained by multiple datasets, only works under version 0.0.1
+|@FawenYo | https://drive.google.com/file/d/1H-YGOUHpmqKxJ9FRc6vAjPuqQki24UbC/view?usp=sharing https://u.teknik.io/AYxWf.pt  | [input](https://github.com/babysor/MockingBird/wiki/audio/self_test.mp3) [output](https://github.com/babysor/MockingBird/wiki/audio/export.wav) | 200k steps with local accent of Taiwan, only works under version 0.0.1
+|@miven| https://pan.baidu.com/s/1PI-hM3sn5wbeChRryX-RCQ code: 2021 https://www.aliyundrive.com/s/AwPsbo8mcSP code: z2m0 | https://www.bilibili.com/video/BV1uh411B7AD/ | only works under version 0.0.1
 
-#### 2.3 Train vocoder (Optional)
+#### 2.4 Train vocoder (Optional)
 > note: vocoder has little difference in effect, so you may not need to train a new one.
 * Preprocess the data:
 `python vocoder_preprocess.py <datasets_root> -m <synthesizer_model_path>`
@@ -77,7 +95,9 @@ You can then try the toolbox:
 
 | URL | Designation | Title | Implementation source |
 | --- | ----------- | ----- | --------------------- |
+| [1803.09017](https://arxiv.org/abs/1803.09017) | GlobalStyleToken (synthesizer)| Style Tokens: Unsupervised Style Modeling, Control and Transfer in End-to-End Speech Synthesis | This repo |
 | [2010.05646](https://arxiv.org/abs/2010.05646) | HiFi-GAN (vocoder)| Generative Adversarial Networks for Efficient and High Fidelity Speech Synthesis | This repo |
+| [2106.02297](https://arxiv.org/abs/2106.02297) | Fre-GAN (vocoder)| Fre-GAN: Adversarial Frequency-consistent Audio Synthesis | This repo |
 |[**1806.04558**](https://arxiv.org/pdf/1806.04558.pdf) | **SV2TTS** | **Transfer Learning from Speaker Verification to Multispeaker Text-To-Speech Synthesis** | This repo |
 |[1802.08435](https://arxiv.org/pdf/1802.08435.pdf) | WaveRNN (vocoder) | Efficient Neural Audio Synthesis | [fatchord/WaveRNN](https://github.com/fatchord/WaveRNN) |
 |[1703.10135](https://arxiv.org/pdf/1703.10135.pdf) | Tacotron (synthesizer) | Tacotron: Towards End-to-End Speech Synthesis | [fatchord/WaveRNN](https://github.com/fatchord/WaveRNN)
@@ -90,6 +110,7 @@ You can then try the toolbox:
 | aidatatang_200zh | [OpenSLR](http://www.openslr.org/62/) | [Google Drive](https://drive.google.com/file/d/110A11KZoVe7vy6kXlLb6zVPLb_J91I_t/view?usp=sharing) |
 | magicdata | [OpenSLR](http://www.openslr.org/68/) | [Google Drive (Dev set)](https://drive.google.com/file/d/1g5bWRUSNH68ycC6eNvtwh07nX3QhOOlo/view?usp=sharing) |
 | aishell3 | [OpenSLR](https://www.openslr.org/93/) | [Google Drive](https://drive.google.com/file/d/1shYp_o4Z0X0cZSKQDtFirct2luFUwKzZ/view?usp=sharing) |
+| data_aishell | [OpenSLR](https://www.openslr.org/33/) |  |
 > After unzip aidatatang_200zh, you need to unzip all the files under `aidatatang_200zh\corpus\train`
 
 #### 2.What is`<datasets_root>`?

@@ -1,5 +1,6 @@
 import ast
 import pprint
+import json
 
 class HParams(object):
     def __init__(self, **kwargs): self.__dict__.update(kwargs)
@@ -16,6 +17,19 @@ class HParams(object):
             values = list(map(str.strip, values))
             for k in keys:
                 self.__dict__[k] = ast.literal_eval(values[keys.index(k)])
+        return self
+
+    def loadJson(self, dict):
+        print("\Loading the json with %s\n", dict)
+        for k in dict.keys():
+            if k not in ["tts_schedule", "tts_finetune_layers"]: 
+                self.__dict__[k] = dict[k]
+        return self
+
+    def dumpJson(self, fp):
+        print("\Saving the json with %s\n", fp)
+        with fp.open("w", encoding="utf-8") as f:
+            json.dump(self.__dict__, f)
         return self
 
 hparams = HParams(
@@ -62,8 +76,10 @@ hparams = HParams(
         tts_clip_grad_norm = 1.0,                   # clips the gradient norm to prevent explosion - set to None if not needed
         tts_eval_interval = 500,                    # Number of steps between model evaluation (sample generation)
                                                     # Set to -1 to generate after completing epoch, or 0 to disable
-
         tts_eval_num_samples = 1,                   # Makes this number of samples
+
+        ## For finetune usage, if set, only selected layers will be trained, available: encoder,encoder_proj,gst,decoder,postnet,post_proj
+        tts_finetune_layers = [], 
 
         ### Data Preprocessing
         max_mel_frames = 900,
@@ -89,4 +105,6 @@ hparams = HParams(
         speaker_embedding_size = 256,               # Dimension for the speaker embedding
         silence_min_duration_split = 0.4,           # Duration in seconds of a silence for an utterance to be split
         utterance_min_duration = 1.6,               # Duration in seconds below which utterances are discarded
+        use_gst = True,                             # Whether to use global style token    
+        use_ser_for_gst = True,                     # Whether to use speaker embedding referenced for global style token  
         )
