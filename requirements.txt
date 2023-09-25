@@ -18,5 +18,5 @@ pypinyin
 flask
 flask_wtf
 flask_cors
-gevent==21.8.0
+gevent==23.9.1
 flask_restx
